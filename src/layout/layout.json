@@ -1,0 +1,75 @@
+[
+    {
+        "id": "1",
+        "description" : "300mm suora osuus",
+        "length" : 300,
+        "entrypoints" : [
+            {
+                "id" : "1A",
+                "connection" : "2A"
+            },
+            {
+                "id" : "1B",
+                "connection" : ""
+
+            }
+        ],
+        "paths" : [
+            ["1A", "1B"]
+        ]
+    },
+    {
+        "id": "2",
+        "length" : 0,
+        "description" : "normaali vaihde",
+        "entrypoints" : [
+            {
+                "id" : "2A",
+                "connection" : "1A"
+            },
+            {
+                "id" : "2B",
+                "connection" : ""
+
+            },
+            {
+                "id" : "2C",
+                "connection" : ""
+
+            }
+        ],
+        "paths" : [
+            ["2A", "2B"], 
+            ["2A", "2C"]
+        ]
+    },
+    {
+        "id": "3",
+        "length" : 0,
+        "description" : "tuplavaihde",
+        "entrypoints" : [
+            {
+                "id" : "3A",
+                "connection" : ""
+            },
+            {
+                "id" : "3B",
+                "connection" : ""
+
+            },
+            {
+                "id" : "3C",
+                "connection" : "2B"
+            },
+            {
+                "id" : "3D",
+                "connection" : "2C"
+            }
+        ],
+        "paths" : [
+            ["3A", "3C"], 
+            ["3A", "3D"], 
+            ["3B", "3D"]
+        ]
+    }
+]
