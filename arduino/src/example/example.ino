@@ -10,6 +10,8 @@ TrackController ctrl(0xdf24, DEBUG);
 void setup() {
   Serial.begin(115200);
   while (!Serial);
+
+
   
   ctrl.begin();
 
@@ -19,6 +21,13 @@ void setup() {
 }
 
 void loop() {
+
+  pinMode(0, OUTPUT);
+  digitalWrite(0, HIGH);
+  delay(500);                   
+  digitalWrite(0, LOW); 
+  delay(1000);  
+
   word speed;
   
   Serial.println("Go");
