@@ -1,0 +1,1 @@
+This is a C++ application for handling the actual controlling logic. Arduino is just used as a simple interface between this application and layout hardware.
