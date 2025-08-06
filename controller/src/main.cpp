@@ -12,42 +12,14 @@
 int arduino(int param);
 
 int main() {
+
+    int arduino_connection = get_arduino_connection();
+
+    if (arduino_connection == -1) {
+        return 0;
+    }
+
     
-    const char* portname = "/dev/ttyACM0";
-
-    int fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
-    if (fd < 0) {
-        std::cerr << "Error opening " << portname << ": " << strerror(errno) << "\n";
-        return 1;
-    }
-
-    termios tty{};
-    if (tcgetattr(fd, &tty) != 0) {
-        std::cerr << "Error from tcgetattr: " << strerror(errno) << "\n";
-        return 1;
-    }
-
-    cfsetospeed(&tty, B9600);
-    cfsetispeed(&tty, B9600);
-
-    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
-    tty.c_iflag &= ~IGNBRK;
-    tty.c_lflag = 0;
-    tty.c_oflag = 0;
-    tty.c_cc[VMIN]  = 0;    // Non-blocking read
-    tty.c_cc[VTIME] = 5;    // 0.5 sec timeout
-
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
-    tty.c_cflag |= (CLOCAL | CREAD);
-    tty.c_cflag &= ~(PARENB | PARODD);
-    tty.c_cflag &= ~CSTOPB;
-    tty.c_cflag &= ~CRTSCTS;
-
-    if (tcsetattr(fd, TCSANOW, &tty) != 0) {
-        std::cerr << "Error from tcsetattr: " << strerror(errno) << "\n";
-        return 1;
-    }
-
     char buf[100];
 
     std::thread producer(eventProducer);
@@ -66,9 +38,9 @@ int main() {
 
             std::cout << "Processing led: " << event << std::endl;
             processedCount++;
-            write(fd, "ON\n", 3);
+            write(arduino_connection, "ON\n", 3);
 
-            int n = read(fd, buf, sizeof(buf) - 1);
+            int n = read(arduino_connection, buf, sizeof(buf) - 1);
             if (n > 0) {
                 buf[n] = '\0';
                 std::cout << "Arduino says: " << buf;
@@ -76,9 +48,9 @@ int main() {
 
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            write(fd, "OFF\n", 4);
+            write(arduino_connection, "OFF\n", 4);
 
-            n = read(fd, buf, sizeof(buf) - 1);
+            n = read(arduino_connection, buf, sizeof(buf) - 1);
             if (n > 0) {
                 buf[n] = '\0';
                 std::cout << "Arduino says: " << buf;
