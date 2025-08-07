@@ -16,14 +16,14 @@ int get_arduino_connection() {
 
     int arduino_file_descriptor = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (arduino_file_descriptor < 0) {
-        std::cerr << "Error opening " << portname << ": " << strerror(errno) << "\n";
-        return 1;
+        std::cerr << "Arduino connection failed: Error opening " << portname << ": " << strerror(errno) << "\n";
+        return -1;
     }
 
     termios tty{};
     if (tcgetattr(arduino_file_descriptor, &tty) != 0) {
         std::cerr << "Error from tcgetattr: " << strerror(errno) << "\n";
-        return 1;
+        return -1;
     }
 
     cfsetospeed(&tty, B9600);

@@ -8,6 +8,8 @@
 #include <cstring>
 #include "arduino.h"
 #include "scheduler.h"
+#include "layout.h"
+#include "dispatcher.h"
 
 int arduino(int param);
 
@@ -18,6 +20,9 @@ int main() {
     if (arduino_connection == -1) {
         return 0;
     }
+
+    std::unique_ptr<Layout> layout = std::make_unique<Layout>();
+    std::unique_ptr<Dispatcher> dispatcher = std::make_unique<Dispatcher>();
 
     
     char buf[100];
