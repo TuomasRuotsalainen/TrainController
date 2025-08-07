@@ -11,20 +11,26 @@
 #include "layout.h"
 #include "dispatcher.h"
 
-int arduino(int param);
 
 int main() {
 
-    int arduino_connection = get_arduino_connection();
+    //int arduino_connection = get_arduino_connection();
 
-    if (arduino_connection == -1) {
-        return 0;
+    //if (arduino_connection == -1) {
+    //    return 0;
+    //}
+
+    std::unique_ptr<ArduinoInterface> arduino = std::make_unique<ArduinoInterface>();
+
+    if (arduino->get_status() == -1) {
+        return 1;
     }
 
     std::unique_ptr<Layout> layout = std::make_unique<Layout>();
-    std::unique_ptr<Dispatcher> dispatcher = std::make_unique<Dispatcher>();
+    std::unique_ptr<Dispatcher> dispatcher = std::make_unique<Dispatcher>(layout.get());
 
-    
+    int arduino_connection = arduino->get_connection();
+
     char buf[100];
 
     std::thread producer(eventProducer);

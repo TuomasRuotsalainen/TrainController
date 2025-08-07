@@ -170,5 +170,17 @@ class Layout {
 
             coupling = std::make_unique<VehicleCoupling>(locomotive.get(), waggon_1.get(), CONNECTED_VERIFIED);
         }
+
+        RailSection* get_lead() {
+            return lead_section.get();
+        }
+
+        RailSection* get_trail() {
+            return trail_section.get();
+        }
+
+        DecouplingRail* get_decoupler() {
+            return decoupling_section.get();
+        }
 };
 

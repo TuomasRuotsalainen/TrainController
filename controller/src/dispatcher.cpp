@@ -19,7 +19,7 @@ class StateChangeCondition {
     private:
 
     public:
-        bool can_change() {
+        bool check_for_change() {
             return false;
         }
 
@@ -34,7 +34,7 @@ class ConditionRailSectionEmpty : public StateChangeCondition {
             this->rail_section=rail_section;
 
         }
-        bool can_change() {
+        bool check_for_change() {
             return rail_section != nullptr && rail_section->get_vehicle_count() == 0;
         }
 
@@ -49,6 +49,15 @@ class StateChange {
         StateChange(State* next_state, std::unique_ptr<StateChangeCondition> change_condition) {
             this->next_state=next_state;
             this->change_condition=std::move(change_condition);
+        }
+
+        // only if change is needed
+        State* get_next_state() {
+            if (change_condition->check_for_change() == true) {
+                return next_state;
+            }
+
+            return nullptr;
         }
 
 };
@@ -67,6 +76,21 @@ class State {
             this->state_changes.push_back(std::move(state_change));
         }
 
+        State* get_next_state() {
+            for (auto& state_change : state_changes) {
+                State* next_state = state_change->get_next_state();
+                if (next_state != nullptr) {
+                    return next_state;
+                }
+            }
+
+            return nullptr;
+        }
+
+        void trigger_entry_commands() {
+            // TODO!
+        }
+
 };
 
 
@@ -82,8 +106,14 @@ class Dispatcher {
         std::unique_ptr<State> moving_to_initial_state;
         // todo add coupling
 
+        State* currrent_state;
+
+        Layout* layout;
+
     public:
-        Dispatcher() {
+        Dispatcher(Layout* layout) {
+
+            this->layout=layout;
 
             // 1. initialize states
             std::vector<Command> initial_state_commands = {LOCOMOTIVE_STOP};
@@ -104,11 +134,26 @@ class Dispatcher {
             std::vector<Command> moving_to_initial_state_commands = {LOCOMOTIVE_AHEAD};
             moving_to_initial_state = std::make_unique<State>(moving_to_initial_state_commands);
 
+            this->currrent_state = initial_state.get();
+
             // 2. define state changes
-            std::unique_ptr<StateChangeCondition> initial_condition = std::make_unique<ConditionRailSectionEmpty>(nullptr);  // TODO which railsection
+            std::unique_ptr<StateChangeCondition> initial_condition = std::make_unique<ConditionRailSectionEmpty>(layout->get_trail());
             std::unique_ptr<StateChange> initial_state_change = std::make_unique<StateChange>(moving_to_decoupling.get(), std::move(initial_condition));
 
             initial_state->add_state_change(std::move(initial_state_change));
+        }
+
+        void check_for_state_change() {
+            State* next_state = this->currrent_state->get_next_state();
+            if (next_state != nullptr) {
+                this->change_state(next_state);
+
+            }
+        }
+
+        void change_state(State* next_state) {
+            this->currrent_state = next_state;
+            this->currrent_state->trigger_entry_commands();
         }
 
 };

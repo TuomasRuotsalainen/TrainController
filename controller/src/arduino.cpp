@@ -7,7 +7,11 @@
 #include <chrono>
 #include <cstring>
 
-int get_arduino_connection() {
+ArduinoInterface::ArduinoInterface() {
+    connection = get_arduino_connection();
+}
+
+int ArduinoInterface::get_arduino_connection() {
 
     const char* portname = "/dev/ttyACM0";
 
@@ -79,6 +83,20 @@ int get_arduino_connection() {
 
     std::cout << "Arduino connection verified!" << std::endl;
     return arduino_file_descriptor;
+}
+
+
+int ArduinoInterface::get_status() {
+    if (connection == -1) {
+        std::cout << "Arduino connection is not OK!" << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+int ArduinoInterface::get_connection() {
+    return connection;
 }
 
 int doStuff() {
