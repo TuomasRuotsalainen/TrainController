@@ -6,6 +6,8 @@
 #include <thread>
 #include <chrono>
 #include <cstring>
+#include "enums.h"
+#include <string>
 
 ArduinoInterface::ArduinoInterface() {
     connection = get_arduino_connection();
@@ -97,6 +99,33 @@ int ArduinoInterface::get_status() {
 
 int ArduinoInterface::get_connection() {
     return connection;
+}
+
+void ArduinoInterface::write_message(std::string message) {
+    std::string message_newline = message + "\n";
+    write(this->connection, message_newline.c_str(), message_newline.size());
+}
+
+void ArduinoInterface::send_command(Command command) {
+    switch (command) {
+        case LOCOMOTIVE_AHEAD:
+            this->write_message("AHEAD");
+            break;
+        case LOCOMOTIVE_REVERSE:
+            this->write_message("REVERSE");
+            break;
+        case LOCOMOTIVE_STOP:
+            this->write_message("STOP");
+            break;
+        case DECOUPLING_ACTION:
+            this->write_message("DECOUPLE");
+            break;
+        default:
+            this->write_message("ON");
+            std::cout << "Unknown command " << command;
+            break;
+
+    }
 }
 
 int doStuff() {

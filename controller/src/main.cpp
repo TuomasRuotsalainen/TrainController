@@ -10,7 +10,7 @@
 #include "scheduler.h"
 #include "layout.h"
 #include "dispatcher.h"
-
+#include "enums.h"
 
 int main() {
 
@@ -27,7 +27,7 @@ int main() {
     }
 
     std::unique_ptr<Layout> layout = std::make_unique<Layout>();
-    std::unique_ptr<Dispatcher> dispatcher = std::make_unique<Dispatcher>(layout.get());
+    std::unique_ptr<Dispatcher> dispatcher = std::make_unique<Dispatcher>(layout.get(), arduino.get());
 
     int arduino_connection = arduino->get_connection();
 
@@ -49,7 +49,7 @@ int main() {
 
             std::cout << "Processing led: " << event << std::endl;
             processedCount++;
-            write(arduino_connection, "ON\n", 3);
+            arduino->send_command(LED);
 
             int n = read(arduino_connection, buf, sizeof(buf) - 1);
             if (n > 0) {
@@ -59,7 +59,7 @@ int main() {
 
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-            write(arduino_connection, "OFF\n", 4);
+            arduino->send_command(LED);
 
             n = read(arduino_connection, buf, sizeof(buf) - 1);
             if (n > 0) {

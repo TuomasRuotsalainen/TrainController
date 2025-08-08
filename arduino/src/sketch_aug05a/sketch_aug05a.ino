@@ -29,7 +29,7 @@ void loop() {
 }
 
 void processCommand(const char* command) {
-  if (strcmp(command, "ON") == 0) {
+  if (strcmp(command, "LED") == 0) {
     digitalWrite(ledPin, HIGH);
     Serial.println("ACK: LED ON");
   } 

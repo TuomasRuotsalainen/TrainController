@@ -1,17 +1,12 @@
 #include <memory>
 #include <vector>
 #include "layout.h"
+#include "enums.h"
+#include "arduino.h"
 
 // this class is responsible for decision making
 // initially a simple state machine
 
-// this is super simple at the moment, will be a proper class later
-enum Command {
-    LOCOMOTIVE_AHEAD,
-    LOCOMOTIVE_REVERSE,
-    LOCOMOTIVE_STOP,
-    DECOUPLING_ACTION,
-};
 
 class State;
 
@@ -87,8 +82,8 @@ class State {
             return nullptr;
         }
 
-        void trigger_entry_commands() {
-            // TODO!
+        std::vector<Command> get_entry_commands() {
+            return this->commands_on_entry;
         }
 
 };
@@ -109,11 +104,13 @@ class Dispatcher {
         State* currrent_state;
 
         Layout* layout;
+        ArduinoInterface* arduino;
 
     public:
-        Dispatcher(Layout* layout) {
+        Dispatcher(Layout* layout, ArduinoInterface* arduino) {
 
             this->layout=layout;
+            this->arduino=arduino;
 
             // 1. initialize states
             std::vector<Command> initial_state_commands = {LOCOMOTIVE_STOP};
@@ -153,7 +150,12 @@ class Dispatcher {
 
         void change_state(State* next_state) {
             this->currrent_state = next_state;
-            this->currrent_state->trigger_entry_commands();
+            std::vector<Command> commands = this->currrent_state->get_entry_commands();
+
+            for (auto& command : commands) {
+                arduino->send_command(command);
+            }
+
         }
 
 };
