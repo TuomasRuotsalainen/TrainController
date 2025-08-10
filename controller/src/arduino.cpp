@@ -7,10 +7,20 @@
 #include <chrono>
 #include <cstring>
 #include "enums.h"
+#include "scheduler.h"
 #include <string>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+
+//std::mutex queueMutex;
+//std::queue<std::string> eventQueue;
+//std::condition_variable cv;
 
 ArduinoInterface::ArduinoInterface() {
     connection = get_arduino_connection();
+    this->subscribe();
+
 }
 
 int ArduinoInterface::get_arduino_connection() {
@@ -87,6 +97,59 @@ int ArduinoInterface::get_arduino_connection() {
     return arduino_file_descriptor;
 }
 
+void ArduinoInterface::serial_read_loop() {
+    try {
+
+        this->running = true;
+
+        char buf[100];
+        std::string partialMessage; // holds data until we have a full line
+
+        while (running) {
+            int n = read(connection, buf, sizeof(buf) - 1);
+            if (n > 0) {
+                buf[n] = '\0';
+                partialMessage += buf; // append new chunk
+
+                // Process all complete lines
+                size_t pos;
+                while ((pos = partialMessage.find('\n')) != std::string::npos) {
+                    std::string fullMessage = partialMessage.substr(0, pos);
+                    
+                    // Remove carriage return if Arduino sends CRLF
+                    if (!fullMessage.empty() && fullMessage.back() == '\r') {
+                        fullMessage.pop_back();
+                    }
+
+                    {
+                        std::lock_guard<std::mutex> lock(queueMutex);
+                        std::cout << "Message from Arduino: " << fullMessage << std::endl;
+                        eventQueue.push(fullMessage);
+                    }
+                    cv.notify_one();
+
+                    // Erase processed message from buffer
+                    partialMessage.erase(0, pos + 1);
+                }
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    } catch (const std::exception &e) {
+        std::cerr << "Exception in serial_read_loop: " << e.what() << std::endl;
+    } catch (...) {
+        std::cerr << "Unknown exception in serial_read_loop" << std::endl;
+    }
+    
+}
+
+
+void ArduinoInterface::subscribe() {
+    reader_thread = std::thread(&ArduinoInterface::serial_read_loop, this);
+
+}
+
+
 
 int ArduinoInterface::get_status() {
     if (connection == -1) {
@@ -122,11 +185,11 @@ void ArduinoInterface::send_command(Command command) {
             break;
         default:
             this->write_message("ON");
-            std::cout << "Unknown command " << command;
             break;
 
     }
 }
+
 
 int doStuff() {
     return 42;

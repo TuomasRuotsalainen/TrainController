@@ -35,8 +35,12 @@ int main() {
 
     std::thread producer(eventProducer);
 
-    int processedCount = 0;
-    const int maxEvents = 10; // stop after 5 events for demo
+    //int processedCount = 0;
+
+    bool stop = false;
+
+            
+    // arduino->send_command(LED);
 
     while (true) {
         std::unique_lock<std::mutex> lock(queueMutex);
@@ -47,54 +51,24 @@ int main() {
             eventQueue.pop();
             lock.unlock();
 
-            std::cout << "Processing led: " << event << std::endl;
-            processedCount++;
-            arduino->send_command(LED);
+            std::cout << "Processing event: " << event << std::endl;
 
-            int n = read(arduino_connection, buf, sizeof(buf) - 1);
-            if (n > 0) {
-                buf[n] = '\0';
-                std::cout << "Arduino says: " << buf;
-            }
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-            arduino->send_command(LED);
-
-            n = read(arduino_connection, buf, sizeof(buf) - 1);
-            if (n > 0) {
-                buf[n] = '\0';
-                std::cout << "Arduino says: " << buf;
-            }
+            //std::cout << "Processing led: " << event << std::endl;
 
             lock.lock();
         }
 
-        if (processedCount >= maxEvents) {
+        if (stop == true) {
             running = false;
             cv.notify_all();
             break;
         }
     }
 
-    producer.join();
-    return 0;
-
-
-    /*
-    for (int i = 1; i <= 10; ++i) {
-        std::cout << "Current number: " << i << std::endl;
+    if (producer.joinable()) {
+        producer.join();
     }
-
-    int jee { 20 };
-
-    std::cout << "Testing arduino: " << arduino(5) << std::endl;
-
-    std::cout << "Testing doStuff: " << doStuff() << std::endl;
-
-    std::cout << "Testing runScheduler: " << runScheduler() << std::endl;
-
-    std::cout << "Hello, C++!" << std::endl;
     return 0;
-    */
+
+
 }
