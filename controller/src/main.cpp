@@ -22,9 +22,13 @@ int main() {
 
     std::unique_ptr<ArduinoInterface> arduino = std::make_unique<ArduinoInterface>();
 
-    if (arduino->get_status() == -1) {
-        return 1;
+    std::cout << "test 1" << std::endl;
+
+    while (arduino->get_status() != 0) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    std::cout << "test 2" << std::endl;
 
     std::unique_ptr<Layout> layout = std::make_unique<Layout>();
     std::unique_ptr<Dispatcher> dispatcher = std::make_unique<Dispatcher>(layout.get(), arduino.get());
@@ -41,6 +45,12 @@ int main() {
 
             
     // arduino->send_command(LED);
+
+    std::cout << "test 3" << std::endl;
+
+    //dispatcher->start();
+
+    std::cout << "test 4" << std::endl;
 
     while (true) {
         std::unique_lock<std::mutex> lock(queueMutex);

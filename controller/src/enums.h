@@ -10,4 +10,11 @@ enum Command {
     LED
 };
 
+enum CouplerState {
+    CONNECTED_VERIFIED,
+    CONNECTED_UNVERIFIED,
+    UNCONNECTED_VERIFIED,
+    UNCONNECTED_UNVERIFIED
+};
+
 #endif
