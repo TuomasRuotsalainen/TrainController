@@ -97,6 +97,12 @@ int ArduinoInterface::get_arduino_connection() {
     return arduino_file_descriptor;
 }
 
+static inline void trim_newline(std::string &s) {
+    while (!s.empty() && (s.back() == '\n' || s.back() == '\r')) {
+        s.pop_back();
+    }
+}
+
 void ArduinoInterface::serial_read_loop() {
     try {
 
@@ -117,13 +123,17 @@ void ArduinoInterface::serial_read_loop() {
                     std::string fullMessage = partialMessage.substr(0, pos);
                     
                     // Remove carriage return if Arduino sends CRLF
-                    if (!fullMessage.empty() && fullMessage.back() == '\r') {
-                        fullMessage.pop_back();
+                    trim_newline(fullMessage);
+
+                    std::cout << "Raw message (with ASCII codes): ";
+                    for (unsigned char c : fullMessage) {
+                        std::cout << "[" << (int)c << "]";
                     }
+                    std::cout << std::endl;
 
                     {
                         std::lock_guard<std::mutex> lock(queueMutex);
-                        std::cout << "Message from Arduino: " << fullMessage << std::endl;
+                        //std::cout << "Message from Arduino: " << fullMessage << std::endl;
                         eventQueue.push(fullMessage);
                     }
                     cv.notify_one();

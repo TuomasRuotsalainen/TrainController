@@ -22,6 +22,10 @@ void eventProducer() {
     std::uniform_int_distribution<> delayDist(1, 4);
     int counter = 0;
 
+    // this can be used to produce events at random intervals
+    // disabled by default, not needed right now
+
+    /*
     while (running) {
         std::this_thread::sleep_for(std::chrono::seconds(delayDist(gen)));
         std::string event = "Event #" + std::to_string(++counter);
@@ -32,4 +36,5 @@ void eventProducer() {
         }
         cv.notify_one();
     }
+    */
 }

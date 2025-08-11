@@ -62,6 +62,7 @@ int main() {
             lock.unlock();
 
             std::cout << "Processing event: " << event << std::endl;
+            layout->process_event(event);
 
             //std::cout << "Processing led: " << event << std::endl;
 

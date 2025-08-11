@@ -3,7 +3,7 @@
 #include <stdexcept> 
 #include "enums.h"
 #include "layout.h"
-
+#include <iostream>
 
 
 VehicleCoupling::VehicleCoupling(Vehicle* lead, Vehicle* trailing, CouplerState state) {
@@ -103,6 +103,25 @@ Layout::Layout() {
 
     coupling = std::make_unique<VehicleCoupling>(locomotive.get(), waggon_1.get(), CONNECTED_VERIFIED);
 }
+
+void Layout::process_event(std::string event) {
+    // process sensor event from hardware, and update the layout accordingly
+    if (event.rfind("PORT1-OPEN", 0) == 0) {
+        std::cout << "Handling open event for PORT1" << std::endl;
+        if (lead_section->get_vehicle_count() > 0) {
+            
+        } else {
+            std::cout << "Lead section is full, cannot add vehicle." << std::endl;
+        }
+        // Handle open event
+    } else if (event.rfind("PORT1-CLOSED", 0) == 0) {
+        std::cout << "Handling close event for PORT1" << std::endl;
+        // Handle close event
+    } else {
+        std::cout << "Unknown event: " << event << std::endl;
+    }
+}
+
 
 RailSection* Layout::get_lead() {
     return lead_section.get();
