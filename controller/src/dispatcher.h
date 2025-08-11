@@ -67,9 +67,13 @@ class Dispatcher {
         std::unique_ptr<State> verifying_decoupling_state;
         std::unique_ptr<State> moving_to_initial_state;
 
+        void change_state(State* next_state);
+
+
     public:
         Dispatcher(Layout* layout, ArduinoInterface* arduino);
         void start();
+        void check_for_state_change();
 };
 
 

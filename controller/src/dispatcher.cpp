@@ -87,9 +87,27 @@ Dispatcher::Dispatcher(Layout* layout, ArduinoInterface* arduino)
 
     initial_state->add_state_change(std::move(initial_state_change));
 }
+
+void Dispatcher::check_for_state_change() {
+        State* next_state = current_state->get_next_state();
+        if (next_state != nullptr) {
+            change_state(next_state);
+
+        }
+    }
+
+void Dispatcher::change_state(State* next_state) {
+    current_state = next_state;
+    std::vector<Command> commands = current_state->get_entry_commands();
+        for (auto& command : commands) {
+            arduino->send_command(command);
+        }
+
+    }
+
 void Dispatcher::start() {
-    // This method is intended to start the dispatcher state machine.
-    // Planned logic: repeatedly check for state changes and execute entry commands for the current state.
-    // Implementation pending.
-    //TODO
+    std::cout << "Dispatcher started." << std::endl;
+    this->check_for_state_change();
+    
 }
+    

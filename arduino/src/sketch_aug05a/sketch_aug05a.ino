@@ -1,3 +1,8 @@
+#include <Railuino.h>
+const word LOCO  = ADDR_MM2 + 45;
+const boolean DEBUG = true;
+const word    SPEED = 50;
+
 // Pin where the LED is connected
 const int ledPin = 13; // Built-in LED on most Arduino boards
 
@@ -5,12 +10,71 @@ const byte CMD_BUF_SIZE = 32;
 char cmdBuffer[CMD_BUF_SIZE];
 byte cmdIndex = 0;
 
+TrackController ctrl(0xdf24, DEBUG);
+
+const int irPort1Pin = A1;
+int irPort1OpenValue = 0;
+float portCloseThreshold = 0.7;
+
+struct IRPort {
+    int pin;  // pin where the photoresistor is connected
+    int openValue;
+    bool isClosed;
+};
+
+IRPort irPort1;
+
+int lightValue = 0;
+
+unsigned long lastIrPortChangeTime = 0;
+bool lastIrPortReadingClosed = false;
+
+int portCloseTimeMillis = 100;
+
+
 void setup() {
+  ctrl.begin();
+  ctrl.setPower(true);
+  ctrl.setLocoFunction(LOCO, 0, 1);
   Serial.begin(9600);
   pinMode(ledPin, OUTPUT); // Set LED pin as an output
+
+  irPort1.pin = irPort1Pin;
+  irPort1.openValue = analogRead(irPort1.pin);
+  irPort1.isClosed = false;
 }
 
 void loop() {
+  lightValue = analogRead(irPort1.pin);
+  bool currentIrPortReadingClosed = (lightValue < irPort1.openValue * portCloseThreshold);
+
+  if (currentIrPortReadingClosed  != lastIrPortReadingClosed) {
+        // State changed — reset timer
+        lastIrPortChangeTime = millis();
+        lastIrPortReadingClosed = currentIrPortReadingClosed ;
+    }
+
+    // If state stayed the same for at least portCloseTimeMillis, commit the change
+    if ((millis() - lastIrPortChangeTime) > portCloseTimeMillis && irPort1.isClosed != currentIrPortReadingClosed) {
+        irPort1.isClosed = currentIrPortReadingClosed;
+        Serial.println(currentIrPortReadingClosed ? "Port 1 is closed" : "Port 1 is opened");
+    }
+
+    /*
+
+    if (lightValue < irPort1.openValue * portCloseThreshold) {
+        if (irPort1.isClosed == false) {
+          Serial.println("Port 1 is closed");
+        }
+        irPort1.isClosed = true;
+    } else {
+        if (irPort1.isClosed == true) {
+            Serial.println("Port 1 is opened");
+        }
+        irPort1.isClosed = false;
+    }*/
+    
+  
   // Read serial input byte-by-byte
   while (Serial.available() > 0) {
     char c = Serial.read();
@@ -28,8 +92,14 @@ void loop() {
   }
 }
 
+void drive() {
+  ctrl.setLocoDirection(LOCO, DIR_REVERSE);
+  ctrl.setLocoSpeed(LOCO, SPEED);
+}
+
 void processCommand(const char* command) {
   if (strcmp(command, "LED") == 0) {
+    ctrl.setLocoFunction(LOCO, 0, 1);
     digitalWrite(ledPin, HIGH);
     Serial.println("ACK: LED ON");
   } 
@@ -39,6 +109,11 @@ void processCommand(const char* command) {
   } 
   else if (strcmp(command, "PING") == 0) {
     Serial.println("PING_OK");
+  }
+  else if (strcmp(command, "REVERSE") == 0) {
+    Serial.println("REVERSE_OK");
+    ctrl.setLocoFunction(LOCO, 0, 1);
+    drive();
   }
   else {
     Serial.print("Unknown command: ");

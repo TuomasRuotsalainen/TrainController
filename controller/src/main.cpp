@@ -48,7 +48,7 @@ int main() {
 
     std::cout << "test 3" << std::endl;
 
-    //dispatcher->start();
+    dispatcher->start();
 
     std::cout << "test 4" << std::endl;
 
