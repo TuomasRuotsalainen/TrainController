@@ -1,7 +1,7 @@
 #include <Railuino.h>
 const word LOCO  = ADDR_MM2 + 45;
 const boolean DEBUG = true;
-const word    SPEED = 50;
+const word    SPEED = 150;
 
 // Pin where the LED is connected
 const int ledPin = 13; // Built-in LED on most Arduino boards
@@ -57,7 +57,11 @@ void loop() {
     // If state stayed the same for at least portCloseTimeMillis, commit the change
     if ((millis() - lastIrPortChangeTime) > portCloseTimeMillis && irPort1.isClosed != currentIrPortReadingClosed) {
         irPort1.isClosed = currentIrPortReadingClosed;
-        Serial.println(currentIrPortReadingClosed ? "Port 1 is closed" : "Port 1 is opened");
+        if (currentIrPortReadingClosed) {
+          Serial.println("PORT1-CLOSED");
+        } else {
+          Serial.println("PORT1-OPEN");
+        }
     }
 
     /*
@@ -90,10 +94,16 @@ void loop() {
       }
     }
   }
+  ctrl.setLocoSpeed(LOCO, 0);
 }
 
-void drive() {
+void reverse() {
   ctrl.setLocoDirection(LOCO, DIR_REVERSE);
+  ctrl.setLocoSpeed(LOCO, SPEED);
+}
+
+void ahead() {
+  ctrl.setLocoDirection(LOCO, DIR_FORWARD);
   ctrl.setLocoSpeed(LOCO, SPEED);
 }
 
@@ -113,9 +123,10 @@ void processCommand(const char* command) {
   else if (strcmp(command, "REVERSE") == 0) {
     Serial.println("REVERSE_OK");
     ctrl.setLocoFunction(LOCO, 0, 1);
-    drive();
-  }
-  else {
+    reverse();
+  } else if (strcmp(command, "AHEAD") == 0) {
+    ahead();
+  } else {
     Serial.print("Unknown command: ");
     Serial.println(command);
   }

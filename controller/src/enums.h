@@ -10,6 +10,11 @@ enum Command {
     LED
 };
 
+enum Direction {
+    TO_LEAD,
+    TO_TRAIL
+};
+
 enum CouplerState {
     CONNECTED_VERIFIED,
     CONNECTED_UNVERIFIED,

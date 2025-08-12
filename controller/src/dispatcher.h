@@ -46,10 +46,11 @@ class State {
         std::vector<std::unique_ptr<StateChange>> state_changes;
 
     public:
-        State(std::vector<Command> commands_on_entry);
+        State(std::string name, std::vector<Command> commands_on_entry);
         void add_state_change(std::unique_ptr<StateChange> state_change);
         State* get_next_state();
         std::vector<Command> get_entry_commands();
+        std::string name;
 
 };
 

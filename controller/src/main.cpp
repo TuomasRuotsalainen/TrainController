@@ -22,13 +22,9 @@ int main() {
 
     std::unique_ptr<ArduinoInterface> arduino = std::make_unique<ArduinoInterface>();
 
-    std::cout << "test 1" << std::endl;
-
     while (arduino->get_status() != 0) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
-    std::cout << "test 2" << std::endl;
 
     std::unique_ptr<Layout> layout = std::make_unique<Layout>();
     std::unique_ptr<Dispatcher> dispatcher = std::make_unique<Dispatcher>(layout.get(), arduino.get());
@@ -46,11 +42,9 @@ int main() {
             
     // arduino->send_command(LED);
 
-    std::cout << "test 3" << std::endl;
 
     dispatcher->start();
 
-    std::cout << "test 4" << std::endl;
 
     while (true) {
         std::unique_lock<std::mutex> lock(queueMutex);
@@ -61,8 +55,12 @@ int main() {
             eventQueue.pop();
             lock.unlock();
 
-            std::cout << "Processing event: " << event << std::endl;
-            layout->process_event(event);
+            //std::cout << "Processing event: " << event << std::endl;
+            bool event_processed = layout->process_event(event);
+            if (event_processed == true) {
+                dispatcher->check_for_state_change();
+            }
+            
 
             //std::cout << "Processing led: " << event << std::endl;
 

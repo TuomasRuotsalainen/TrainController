@@ -14,6 +14,14 @@ VehicleCoupling::VehicleCoupling(Vehicle* lead, Vehicle* trailing, CouplerState 
 
 Locomotive::Locomotive(int actuator_id) : Vehicle(), actuator_locomotive_id(actuator_id) {}
 
+void Locomotive::set_direction(Direction dir) {
+    this->direction = dir;
+}
+
+Direction Locomotive::get_direction() {
+    return direction;
+}
+
 RailSection::RailSection(const int vehicle_capacity, RailSection* lead_railsection, RailSection* trail_railsection) {
     this->vehicle_capacity = vehicle_capacity;
     this->lead_railsection = lead_railsection;
@@ -102,26 +110,67 @@ Layout::Layout() {
     waggon_1 = std::make_unique<Waggon>();
 
     coupling = std::make_unique<VehicleCoupling>(locomotive.get(), waggon_1.get(), CONNECTED_VERIFIED);
+
+    lead_section->enter_vehicle_lead(locomotive.get());
 }
 
-void Layout::process_event(std::string event) {
-    // process sensor event from hardware, and update the layout accordingly
+bool Layout::process_event(std::string event) {
+    // process sensor event from hardware, and update the layout stateaccordingly
+    // port change state means, that a convoy has progressed in two possible ways:
+    // 1. a vehicle has entered a decoupling rail section
+    // 2. a vehicle has exited a decoupling rail section
     if (event.rfind("PORT1-OPEN", 0) == 0) {
+        // a vehicle has exited the decoupling rail section
+        // -> find out the rail section where the vehicle will go
+        // -> add vehicle to the next rail section and remove it from the decoupling rail section
         std::cout << "Handling open event for PORT1" << std::endl;
-        if (lead_section->get_vehicle_count() > 0) {
-            
+        RailSection* next_section;
+        if (locomotive->get_direction() == TO_TRAIL) {
+            next_section = decoupling_section->get_trail();
         } else {
-            std::cout << "Lead section is full, cannot add vehicle." << std::endl;
+            next_section = decoupling_section->get_lead();
         }
-        // Handle open event
+
+        this->decoupling_section->exit_vehicle_lead();
+        this->lead_section->enter_vehicle_lead(locomotive.get());
+        std::cout << "Open event for PORT1 handled" << std::endl;
+        return true;
+        
     } else if (event.rfind("PORT1-CLOSED", 0) == 0) {
+        // a vehicle has entered the decoupling rail section
+        // -> find out from which rail section the vehicle came
+        // -> remove vehicle from the previous rail section and add it to the decoupling rail section
         std::cout << "Handling close event for PORT1" << std::endl;
-        // Handle close event
+        RailSection* previous_section;
+        if (locomotive->get_direction() == TO_TRAIL) {
+            previous_section = decoupling_section->get_lead();
+        } else {
+            previous_section = decoupling_section->get_trail();
+        }
+        this->lead_section->exit_vehicle_trailing();
+        this->decoupling_section->enter_vehicle_trailing(locomotive.get());
+        std::cout << "Close event for PORT1 handled" << std::endl;
+        return true;
     } else {
-        std::cout << "Unknown event: " << event << std::endl;
+        //std::cout << "Unknown event: " << event << std::endl;
+    }
+
+    return false;
+}
+
+void Layout::process_command(Command command) {
+    // process a command from the dispatcher
+    switch (command) {
+        case LOCOMOTIVE_REVERSE:
+            std::cout << "Reversing locomotive" << std::endl;
+            locomotive->set_direction(TO_TRAIL);
+            break;
+        case LOCOMOTIVE_AHEAD:
+            std::cout << "Moving locomotive ahead" << std::endl;
+            locomotive->set_direction(TO_LEAD);
+            break;
     }
 }
-
 
 RailSection* Layout::get_lead() {
     return lead_section.get();
@@ -133,4 +182,3 @@ RailSection* Layout::get_trail() {
 DecouplingRail* Layout::get_decoupler() {
     return decoupling_section.get();
 }
-

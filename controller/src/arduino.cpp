@@ -125,12 +125,12 @@ void ArduinoInterface::serial_read_loop() {
                     // Remove carriage return if Arduino sends CRLF
                     trim_newline(fullMessage);
 
-                    std::cout << "Raw message (with ASCII codes): ";
+                    /*std::cout << "Raw message (with ASCII codes): ";
                     for (unsigned char c : fullMessage) {
                         std::cout << "[" << (int)c << "]";
                     }
                     std::cout << std::endl;
-
+                    */
                     {
                         std::lock_guard<std::mutex> lock(queueMutex);
                         //std::cout << "Message from Arduino: " << fullMessage << std::endl;

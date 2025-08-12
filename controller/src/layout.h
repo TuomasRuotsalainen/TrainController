@@ -20,10 +20,12 @@ class VehicleCoupling {
 class Locomotive : public Vehicle {
     private:
         int actuator_locomotive_id;
-        bool direction; // true = ahead, false = reverse
+        Direction direction;
 
     public:
         Locomotive(int actuator_id);
+        Direction get_direction();
+        void set_direction(Direction dir);
 };
 
 class Waggon : public Vehicle {};
@@ -97,7 +99,8 @@ class Layout{
 
         DecouplingRail* get_decoupler();
 
-        void process_event(std::string event);
+        bool process_event(std::string event);
+        void process_command(Command command);
 };
 
 #endif
