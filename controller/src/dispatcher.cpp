@@ -22,8 +22,7 @@ ConditionRailSectionEmpty::ConditionRailSectionEmpty(RailSection* rail_section)
 
 bool ConditionRailSectionEmpty::check_for_change() {
     std::cout << "Checking if rail section is empty..." << std::endl;
-    std::cout << "Rail section vehicle count: " << rail_section->get_vehicle_count() << std::endl;
-    std::cout << "Rail section pointer: " << rail_section << std::endl;
+    std::cout << "Rail section " << rail_section->name << " vehicle count: " << rail_section->get_vehicle_count() << std::endl;
     return rail_section != nullptr && rail_section->get_vehicle_count() == 0;
 }
 
@@ -112,6 +111,8 @@ void Dispatcher::check_for_state_change() {
     } else {
         std::cout << "No state change detected." << std::endl;
     }
+
+    std::cout << std::endl;
     }
 
 void Dispatcher::change_state(State* next_state) {
@@ -119,6 +120,7 @@ void Dispatcher::change_state(State* next_state) {
     std::vector<Command> commands = current_state->get_entry_commands();
         for (auto& command : commands) {
             arduino->send_command(command);
+            layout->process_command(command);
         }
 
     }

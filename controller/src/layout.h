@@ -2,6 +2,7 @@
 #define LAYOUT_H
 
 #include "enums.h"
+#include <string>
 
 class Vehicle {
 
@@ -40,7 +41,10 @@ class RailSection {
         int vehicle_capacity;
 
     public:
-        RailSection(const int vehicle_capacity, RailSection* lead_railsection, RailSection* trail_railsection);
+
+        std::string name;
+
+        RailSection(std::string name, const int vehicle_capacity, RailSection* lead_railsection, RailSection* trail_railsection);
 
         int get_vehicle_count();
 
@@ -67,7 +71,7 @@ class RailSection {
 
 class StraightRail : public RailSection{
     public:
-        StraightRail(const int capacity, RailSection* lead, RailSection* trail);
+        StraightRail(std::string name, const int capacity, RailSection* lead, RailSection* trail);
 };
 
 class DecouplingRail : public RailSection{
@@ -76,7 +80,7 @@ class DecouplingRail : public RailSection{
         int actuator_decoupler_id;
 
     public:
-        DecouplingRail(RailSection* lead, RailSection* trail, int ir_port, int decoupler);
+        DecouplingRail(std::string name, RailSection* lead, RailSection* trail, int ir_port, int decoupler);
 };
 
 class Layout{

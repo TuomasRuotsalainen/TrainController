@@ -22,7 +22,8 @@ Direction Locomotive::get_direction() {
     return direction;
 }
 
-RailSection::RailSection(const int vehicle_capacity, RailSection* lead_railsection, RailSection* trail_railsection) {
+RailSection::RailSection(std::string name, const int vehicle_capacity, RailSection* lead_railsection, RailSection* trail_railsection) {
+    this->name = name;
     this->vehicle_capacity = vehicle_capacity;
     this->lead_railsection = lead_railsection;
     this->trail_railsection = trail_railsection;
@@ -92,11 +93,11 @@ void RailSection::update_trail(RailSection* section) {
     this->trail_railsection = section;
 }
 
-StraightRail::StraightRail(int vehicle_capacity, RailSection* lead_railsection, RailSection* trail_railsection)
-    : RailSection(vehicle_capacity, lead_railsection, trail_railsection) {}
+StraightRail::StraightRail(std::string name, int vehicle_capacity, RailSection* lead_railsection, RailSection* trail_railsection)
+    : RailSection(name, vehicle_capacity, lead_railsection, trail_railsection) {}
 
-DecouplingRail::DecouplingRail(RailSection* lead, RailSection* trail, int sensor_ir_port_id, int actuator_decoupler_id)
-    : RailSection(1, lead, trail), sensor_ir_port_id(sensor_ir_port_id), actuator_decoupler_id(actuator_decoupler_id) {}
+DecouplingRail::DecouplingRail(std::string name, RailSection* lead, RailSection* trail, int sensor_ir_port_id, int actuator_decoupler_id)
+    : RailSection(name, 1, lead, trail), sensor_ir_port_id(sensor_ir_port_id), actuator_decoupler_id(actuator_decoupler_id) {}
 
 
 Layout::Layout() {
@@ -104,10 +105,10 @@ Layout::Layout() {
     int SENSOR_IR_PORT_ID = 0;
     int ACTUATOR_DECOUPLER_ID = 0;
 
-    lead_section = std::make_unique<StraightRail>(10, nullptr, nullptr);
-    trail_section = std::make_unique<StraightRail>(10, nullptr, nullptr);
-    decoupling_section = std::make_unique<DecouplingRail>(lead_section.get(), trail_section.get(), SENSOR_IR_PORT_ID, ACTUATOR_DECOUPLER_ID);
-    
+    lead_section = std::make_unique<StraightRail>("lead_section", 10, nullptr, nullptr);
+    trail_section = std::make_unique<StraightRail>("trail_section", 10, nullptr, nullptr);
+    decoupling_section = std::make_unique<DecouplingRail>("decoupling_section", lead_section.get(), trail_section.get(), SENSOR_IR_PORT_ID, ACTUATOR_DECOUPLER_ID);
+
     int ACTUATOR_LOCOMOTIVE_ID = 0;
 
     locomotive = std::make_unique<Locomotive>(ACTUATOR_LOCOMOTIVE_ID);
@@ -130,14 +131,18 @@ bool Layout::process_event(std::string event) {
         // -> add vehicle to the next rail section and remove it from the decoupling rail section
         std::cout << "Handling open event for PORT1" << std::endl;
         RailSection* next_section;
+        std::cout << "Locomotive direction: " << locomotive->get_direction() << ", " << (locomotive->get_direction() == TO_TRAIL ? "TO_TRAIL" : "TO_LEAD") << std::endl;
         if (locomotive->get_direction() == TO_TRAIL) {
+            std::cout << "Locomotive is moving to trail" << std::endl;
             next_section = decoupling_section->get_trail();
         } else {
+            std::cout << "Locomotive is moving to lead" << std::endl;
             next_section = decoupling_section->get_lead();
         }
 
         Vehicle* exited_vehicle = this->decoupling_section->exit_vehicle_lead();
-        this->lead_section->enter_vehicle_lead(exited_vehicle);
+        next_section->enter_vehicle_lead(exited_vehicle);
+        std::cout << "Vehicle exited decoupling section and entered " << next_section->name << std::endl;
         std::cout << "Open event for PORT1 handled" << std::endl;
         return true;
         
@@ -154,7 +159,7 @@ bool Layout::process_event(std::string event) {
         }
         Vehicle* exited_vehicle = this->lead_section->exit_vehicle_trailing();
         this->decoupling_section->enter_vehicle_trailing(exited_vehicle);
-        std::cout << "Close event for PORT1 handled" << std::endl;
+        //std::cout << "Close event for PORT1 handled" << std::endl;
         return true;
     } else {
         //std::cout << "Unknown event: " << event << std::endl;
