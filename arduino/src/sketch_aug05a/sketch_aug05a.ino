@@ -1,6 +1,6 @@
 #include <Railuino.h>
 const word LOCO  = ADDR_MM2 + 45;
-const boolean DEBUG = true;
+const boolean DEBUG = false;
 const word    SPEED = 150;
 
 // Pin where the LED is connected
@@ -31,12 +31,31 @@ bool lastIrPortReadingClosed = false;
 
 int portCloseTimeMillis = 100;
 
+void reverse() {
+  ctrl.setLocoDirection(LOCO, DIR_REVERSE);
+  ctrl.setLocoSpeed(LOCO, SPEED);
+}
+
+void ahead() {
+  ctrl.setLocoDirection(LOCO, DIR_FORWARD);
+  ctrl.setLocoSpeed(LOCO, SPEED);
+}
+
+void stop() {
+  ctrl.setLocoSpeed(LOCO, 0);
+}
 
 void setup() {
+  Serial.begin(9600);
+  Serial.println("SETUP");
+  
   ctrl.begin();
   ctrl.setPower(true);
   ctrl.setLocoFunction(LOCO, 0, 1);
-  Serial.begin(9600);
+
+  ahead();
+
+  
   pinMode(ledPin, OUTPUT); // Set LED pin as an output
 
   irPort1.pin = irPort1Pin;
@@ -94,18 +113,8 @@ void loop() {
       }
     }
   }
-  ctrl.setLocoSpeed(LOCO, 0);
 }
 
-void reverse() {
-  ctrl.setLocoDirection(LOCO, DIR_REVERSE);
-  ctrl.setLocoSpeed(LOCO, SPEED);
-}
-
-void ahead() {
-  ctrl.setLocoDirection(LOCO, DIR_FORWARD);
-  ctrl.setLocoSpeed(LOCO, SPEED);
-}
 
 void processCommand(const char* command) {
   if (strcmp(command, "LED") == 0) {
@@ -126,6 +135,9 @@ void processCommand(const char* command) {
     reverse();
   } else if (strcmp(command, "AHEAD") == 0) {
     ahead();
+  } else if (strcmp(command, "STOP") == 0) {
+    Serial.println("STOP_OK");
+    stop();
   } else {
     Serial.print("Unknown command: ");
     Serial.println(command);
