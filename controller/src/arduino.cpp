@@ -182,12 +182,15 @@ void ArduinoInterface::write_message(std::string message) {
 void ArduinoInterface::send_command(Command command) {
     switch (command) {
         case LOCOMOTIVE_AHEAD:
+            std::cout << "Sending command to Arduino: AHEAD" << std::endl;
             this->write_message("AHEAD");
             break;
         case LOCOMOTIVE_REVERSE:
+            std::cout << "Sending command to Arduino: REVERSE" << std::endl;
             this->write_message("REVERSE");
             break;
         case LOCOMOTIVE_STOP:
+            std::cout << "Sending command to Arduino: STOP" << std::endl;
             this->write_message("STOP");
             break;
         case DECOUPLING_ACTION:

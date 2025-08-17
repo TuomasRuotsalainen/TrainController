@@ -11,8 +11,21 @@
 #include "layout.h"
 #include "dispatcher.h"
 #include "enums.h"
+#include <csignal> 
+
+std::atomic<bool> stop_requested(false);
+
+void signal_handler(int signum) {
+    std::cout << "\nCaught signal " << signum << " (Ctrl+C pressed). Stopping...\n";
+    stop_requested = true;
+    cv.notify_all();
+}
 
 int main() {
+
+    std::signal(SIGINT, signal_handler);
+
+
 
     //int arduino_connection = get_arduino_connection();
 
@@ -46,9 +59,9 @@ int main() {
     dispatcher->start();
 
 
-    while (true) {
+    while (!stop_requested) {
         std::unique_lock<std::mutex> lock(queueMutex);
-        cv.wait(lock, [] { return !eventQueue.empty() || !running; });
+        cv.wait(lock, [] { return !eventQueue.empty() || stop_requested; });
 
         while (!eventQueue.empty()) {
             std::string event = eventQueue.front();
@@ -73,6 +86,9 @@ int main() {
             break;
         }
     }
+
+    arduino->send_command(LOCOMOTIVE_STOP);
+
 
     if (producer.joinable()) {
         producer.join();

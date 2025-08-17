@@ -45,10 +45,10 @@ class RailSection {
         int get_vehicle_count();
 
         // remove instance at index 0 from vehicles
-        void exit_vehicle_lead();
+        Vehicle* exit_vehicle_lead();
 
         // remove instance at last index from vehicles
-        void exit_vehicle_trailing();
+        Vehicle* exit_vehicle_trailing();
 
         // add vehicle to first index of vehicles
         void enter_vehicle_lead(Vehicle* vehicle);

@@ -40,17 +40,21 @@ int RailSection::get_vehicle_count() {
     return vehicles.size();
 }
 
-void RailSection::exit_vehicle_lead() {
+Vehicle* RailSection::exit_vehicle_lead() {
     if (!vehicles.empty()) {
+        Vehicle* vehicle = vehicles.front();
         vehicles.erase(vehicles.begin());
+        return vehicle;
     } else {
         throw std::out_of_range("No vehicles to exit from lead");
     }
 }
 
-void RailSection::exit_vehicle_trailing() {
+Vehicle* RailSection::exit_vehicle_trailing() {
     if (!vehicles.empty()) {
+        Vehicle* vehicle = vehicles.back();
         vehicles.pop_back();
+        return vehicle;
     } else {
         throw std::out_of_range("No vehicles to exit from trailing");
     }
@@ -111,6 +115,7 @@ Layout::Layout() {
 
     coupling = std::make_unique<VehicleCoupling>(locomotive.get(), waggon_1.get(), CONNECTED_VERIFIED);
 
+    lead_section->enter_vehicle_lead(waggon_1.get());
     lead_section->enter_vehicle_lead(locomotive.get());
 }
 
@@ -131,8 +136,8 @@ bool Layout::process_event(std::string event) {
             next_section = decoupling_section->get_lead();
         }
 
-        this->decoupling_section->exit_vehicle_lead();
-        this->lead_section->enter_vehicle_lead(locomotive.get());
+        Vehicle* exited_vehicle = this->decoupling_section->exit_vehicle_lead();
+        this->lead_section->enter_vehicle_lead(exited_vehicle);
         std::cout << "Open event for PORT1 handled" << std::endl;
         return true;
         
@@ -147,8 +152,8 @@ bool Layout::process_event(std::string event) {
         } else {
             previous_section = decoupling_section->get_trail();
         }
-        this->lead_section->exit_vehicle_trailing();
-        this->decoupling_section->enter_vehicle_trailing(locomotive.get());
+        Vehicle* exited_vehicle = this->lead_section->exit_vehicle_trailing();
+        this->decoupling_section->enter_vehicle_trailing(exited_vehicle);
         std::cout << "Close event for PORT1 handled" << std::endl;
         return true;
     } else {
