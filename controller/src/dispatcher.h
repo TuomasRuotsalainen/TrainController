@@ -31,11 +31,12 @@ class State;
 class StateChange {
     private:
         State* next_state;
-        std::unique_ptr<StateChangeCondition> change_condition;
+        std::vector<std::unique_ptr<StateChangeCondition>> change_conditions;
 
     public:
-        StateChange(State* next_state, std::unique_ptr<StateChangeCondition> change_condition);
+        StateChange(State* next_state);
         State* get_next_state();
+        void add_state_change_condition(std::unique_ptr<StateChangeCondition> condition);
 
 };
 

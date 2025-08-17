@@ -26,12 +26,24 @@ bool ConditionRailSectionEmpty::check_for_change() {
     return rail_section != nullptr && rail_section->get_vehicle_count() == 0;
 }
 
-StateChange::StateChange(State* next_state, std::unique_ptr<StateChangeCondition> change_condition)
-    : next_state(next_state), change_condition(std::move(change_condition)) {
+StateChange::StateChange(State* next_state)
+    : next_state(next_state) {
+}
+
+void StateChange::add_state_change_condition(std::unique_ptr<StateChangeCondition> condition) {
+    change_conditions.push_back(std::move(condition));
 }
 
 State* StateChange::get_next_state() {
-    if (change_condition->check_for_change() == true) {
+    bool all_conditions_met = true;
+    for (const auto& change_condition : change_conditions) {
+        if (!change_condition->check_for_change()) {
+            all_conditions_met = false;
+            break;
+        }
+    }
+
+    if (all_conditions_met) {
         return next_state;
     }
 
@@ -87,17 +99,23 @@ Dispatcher::Dispatcher(Layout* layout, ArduinoInterface* arduino)
 
     // 2. define state changes
     std::unique_ptr<StateChangeCondition> initial_condition = std::make_unique<ConditionRailSectionEmpty>(layout->get_trail());
-    std::unique_ptr<StateChange> initial_state_change = std::make_unique<StateChange>(moving_to_decoupling.get(), std::move(initial_condition));
+    std::unique_ptr<StateChange> initial_state_change = std::make_unique<StateChange>(moving_to_decoupling.get());
+    initial_state_change->add_state_change_condition(std::move(initial_condition));
 
     initial_state->add_state_change(std::move(initial_state_change));
 
     std::unique_ptr<StateChangeCondition> moving_to_decoupling_condition = std::make_unique<ConditionRailSectionEmpty>(layout->get_lead());
-    std::unique_ptr<StateChange> moving_to_decoupling_change = std::make_unique<StateChange>(moving_to_initial_state.get(), std::move(moving_to_decoupling_condition));
+    
+    std::unique_ptr<StateChange> moving_to_decoupling_change = std::make_unique<StateChange>(moving_to_initial_state.get());
+    moving_to_decoupling_change->add_state_change_condition(std::move(moving_to_decoupling_condition));
 
     moving_to_decoupling->add_state_change(std::move(moving_to_decoupling_change));
 
     std::unique_ptr<StateChangeCondition> moving_to_initial_state_condition = std::make_unique<ConditionRailSectionEmpty>(layout->get_decoupler());
-    std::unique_ptr<StateChange> moving_to_initial_state_change = std::make_unique<StateChange>(moving_to_decoupling.get(), std::move(moving_to_initial_state_condition));
+    std::unique_ptr<StateChangeCondition> moving_to_initial_state_condition_2 = std::make_unique<ConditionRailSectionEmpty>(layout->get_trail());
+    std::unique_ptr<StateChange> moving_to_initial_state_change = std::make_unique<StateChange>(moving_to_decoupling.get());
+    moving_to_initial_state_change->add_state_change_condition(std::move(moving_to_initial_state_condition));
+    moving_to_initial_state_change->add_state_change_condition(std::move(moving_to_initial_state_condition_2));
 
     moving_to_initial_state->add_state_change(std::move(moving_to_initial_state_change));
 }

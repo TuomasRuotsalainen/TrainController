@@ -157,7 +157,8 @@ bool Layout::process_event(std::string event) {
         } else {
             previous_section = decoupling_section->get_trail();
         }
-        Vehicle* exited_vehicle = this->lead_section->exit_vehicle_trailing();
+
+        Vehicle* exited_vehicle = previous_section->exit_vehicle_trailing(); // TODO NOT ALWAYS TRAILING
         this->decoupling_section->enter_vehicle_trailing(exited_vehicle);
         //std::cout << "Close event for PORT1 handled" << std::endl;
         return true;
